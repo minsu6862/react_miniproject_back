@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.6'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'com.github.node-gradle.node' version '7.1.0'  // ← 추가
 }
 
 group = 'com.minsu'
@@ -40,4 +41,49 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+
+/* ===== React 빌드 설정 ===== */
+
+// 프론트엔드 디렉토리 변수
+def frontendDir = "$projectDir/src/main/frontend"
+
+// Node.js 환경 설정
+node {
+    version = '22.19.0'
+    download = true
+    workDir = file("${project.buildDir}/nodejs")
+    npmWorkDir = file("${project.buildDir}/npm")
+}
+
+// npm install 실행
+tasks.register('npmCustomInstall', com.github.gradle.node.npm.task.NpmTask) {
+    workingDir = file(frontendDir)
+    args = ['install']
+}
+
+// npm run build 실행
+tasks.register('npmBuild', com.github.gradle.node.npm.task.NpmTask) {
+    dependsOn 'npmCustomInstall'  // ← npmInstall이 아니라 npmCustomInstall
+    workingDir = file(frontendDir)
+    args = ['run', 'build']
+}
+
+// React 빌드 결과를 Spring Boot static 폴더로 복사
+tasks.register('copyFrontend', Copy) {
+    dependsOn 'npmBuild'
+    from "$frontendDir/build"
+    into "$projectDir/src/main/resources/static"
+}
+
+// Spring Boot 빌드 시 React도 자동 빌드
+tasks.named('processResources') {
+    dependsOn 'copyFrontend'
+}
+
+// clean 시 프론트엔드 빌드 결과도 삭제
+tasks.named('clean') {
+    delete "$frontendDir/build"
+    delete "$projectDir/src/main/resources/static"
 }

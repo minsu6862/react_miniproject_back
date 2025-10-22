@@ -36,15 +36,33 @@ public class SecurityConfig {
                     .maxSessionsPreventsLogin(false)
             )
             .authorizeHttpRequests(auth -> auth
-                // 인증 없이 접근 가능
-                .requestMatchers("/api/auth/signup", "/api/auth/login").permitAll()
-                // 게시글 목록, 상세보기, 검색 - 읽기만 허용
+                // ✅ React 라우터 경로들 모두 허용
+                .requestMatchers(
+                    "/",
+                    "/login",
+                    "/signup", 
+                    "/board",
+                    "/board/**"
+                ).permitAll()
+                
+                // ✅ 정적 리소스 허용
+                .requestMatchers(
+                    "/index.html",
+                    "/static/**",
+                    "/favicon.ico",
+                    "/manifest.json",
+                    "/logo*.png",
+                    "/*.css",
+                    "/*.js",
+                    "/asset-manifest.json"
+                ).permitAll()
+                
+                // API 엔드포인트
+                .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/me").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/**", "/api/posts/search").permitAll()
-                // 댓글 목록 조회 - 읽기만 허용
                 .requestMatchers(HttpMethod.GET, "/api/comments/post/**").permitAll()
-                // 현재 사용자 정보 조회 (로그인 상태 확인용)
-                .requestMatchers("/api/auth/me").permitAll()
-                // ✅ 나머지 모든 요청은 인증 필요 (POST, PUT, DELETE 등)
+                
+                // 나머지는 인증 필요
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form.disable())
@@ -67,7 +85,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",
+            "http://localhost:8889",
+            "http://172.30.1.92:3000",
+            "http://172.30.1.92:8889"
+        ));
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
