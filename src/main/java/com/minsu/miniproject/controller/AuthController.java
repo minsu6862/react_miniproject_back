@@ -95,8 +95,11 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         
+        UserResponse user = userService.getUserByUsername(authentication.getName());
+        
         Map<String, String> response = new HashMap<>();
-        response.put("username", authentication.getName());
+        response.put("username", user.getUsername());
+        response.put("nickname", user.getNickname());
         return ResponseEntity.ok(response);
     }
 }

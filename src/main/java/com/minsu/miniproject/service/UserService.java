@@ -59,4 +59,18 @@ public class UserService {
                 .createdAt(user.getCreatedAt())
                 .build();
     }
+    
+    // UserService.java
+    public UserResponse getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+        
+        return UserResponse.builder()
+            .id(user.getId())
+            .username(user.getUsername())
+            .nickname(user.getNickname())
+            .email(user.getEmail())
+            .createdAt(user.getCreatedAt())
+            .build();
+    }
 }

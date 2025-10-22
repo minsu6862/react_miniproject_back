@@ -26,6 +26,7 @@ public class PostService {
                 .map(this::convertToResponse);
     }
 
+    @Transactional
     public PostResponse getPostById(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다"));

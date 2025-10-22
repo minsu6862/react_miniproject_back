@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -25,22 +26,23 @@ public class PostController {
 
     @GetMapping
     public ResponseEntity<Page<PostResponse>> getAllPosts(
-            @RequestParam(defaultValue = "0") int page,  // @RequestParam 추가!
-            @RequestParam(defaultValue = "10") int size) { // @RequestParam 추가!
-        Pageable pageable = PageRequest.of(page, size);
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return ResponseEntity.ok(postService.getAllPosts(pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PostResponse> getPostById(@PathVariable Long id) {
+    public ResponseEntity<PostResponse> getPostById(
+            @PathVariable(name = "id") Long id) {
         return ResponseEntity.ok(postService.getPostById(id));
     }
 
     @GetMapping("/search")
     public ResponseEntity<Page<PostResponse>> searchPosts(
-            @RequestParam String keyword,  // @RequestParam 추가!
-            @RequestParam(defaultValue = "0") int page,  // @RequestParam 추가!
-            @RequestParam(defaultValue = "10") int size) { // @RequestParam 추가!
+            @RequestParam(name = "keyword") String keyword,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(postService.searchPosts(keyword, pageable));
     }
@@ -55,7 +57,7 @@ public class PostController {
                 error.put("message", "로그인이 필요합니다");
                 return ResponseEntity.status(401).body(error);
             }
-            
+
             String username = authentication.getName();
             PostResponse post = postService.createPost(request, username);
             return ResponseEntity.ok(post);
@@ -68,7 +70,7 @@ public class PostController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePost(
-            @PathVariable Long id,
+    		@PathVariable(name = "id") Long id,  // ← 여기 수정!
             @Valid @RequestBody PostRequest request,
             Authentication authentication) {
         try {
@@ -77,7 +79,7 @@ public class PostController {
                 error.put("message", "로그인이 필요합니다");
                 return ResponseEntity.status(401).body(error);
             }
-            
+
             String username = authentication.getName();
             PostResponse post = postService.updatePost(id, request, username);
             return ResponseEntity.ok(post);
@@ -90,7 +92,7 @@ public class PostController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePost(
-            @PathVariable Long id,
+    		@PathVariable(name = "id") Long id,  // ← 여기 수정!
             Authentication authentication) {
         try {
             if (authentication == null || !authentication.isAuthenticated()) {
@@ -98,7 +100,7 @@ public class PostController {
                 error.put("message", "로그인이 필요합니다");
                 return ResponseEntity.status(401).body(error);
             }
-            
+
             String username = authentication.getName();
             postService.deletePost(id, username);
             Map<String, String> response = new HashMap<>();

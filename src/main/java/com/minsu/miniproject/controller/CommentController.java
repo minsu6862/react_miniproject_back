@@ -22,13 +22,14 @@ public class CommentController {
     private final CommentService commentService;
 
     @GetMapping("/post/{postId}")
-    public ResponseEntity<List<CommentResponse>> getCommentsByPostId(@PathVariable Long postId) {
+    public ResponseEntity<List<CommentResponse>> getCommentsByPostId(
+            @PathVariable(name = "postId") Long postId) {
         return ResponseEntity.ok(commentService.getCommentsByPostId(postId));
     }
 
     @PostMapping("/post/{postId}")
     public ResponseEntity<?> createComment(
-            @PathVariable Long postId,
+            @PathVariable(name = "postId") Long postId,
             @Valid @RequestBody CommentRequest request,
             Authentication authentication) {
         try {
@@ -37,7 +38,7 @@ public class CommentController {
                 error.put("message", "로그인이 필요합니다");
                 return ResponseEntity.status(401).body(error);
             }
-            
+
             String username = authentication.getName();
             CommentResponse comment = commentService.createComment(postId, request, username);
             return ResponseEntity.ok(comment);
@@ -50,7 +51,7 @@ public class CommentController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateComment(
-            @PathVariable Long id,
+            @PathVariable(name = "id") Long id,
             @Valid @RequestBody CommentRequest request,
             Authentication authentication) {
         try {
@@ -59,7 +60,7 @@ public class CommentController {
                 error.put("message", "로그인이 필요합니다");
                 return ResponseEntity.status(401).body(error);
             }
-            
+
             String username = authentication.getName();
             CommentResponse comment = commentService.updateComment(id, request, username);
             return ResponseEntity.ok(comment);
@@ -72,7 +73,7 @@ public class CommentController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteComment(
-            @PathVariable Long id,
+            @PathVariable(name = "id") Long id,
             Authentication authentication) {
         try {
             if (authentication == null || !authentication.isAuthenticated()) {
@@ -80,7 +81,7 @@ public class CommentController {
                 error.put("message", "로그인이 필요합니다");
                 return ResponseEntity.status(401).body(error);
             }
-            
+
             String username = authentication.getName();
             commentService.deleteComment(id, username);
             Map<String, String> response = new HashMap<>();
