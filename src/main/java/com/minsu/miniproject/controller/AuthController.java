@@ -1,5 +1,13 @@
 package com.minsu.miniproject.controller;
 
+import com.minsu.miniproject.dto.LoginRequest;
+import com.minsu.miniproject.dto.SignupRequest;
+import com.minsu.miniproject.dto.UserResponse;
+import com.minsu.miniproject.service.UserService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -8,13 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
-
-import com.minsu.miniproject.dto.LoginRequest;
-import com.minsu.miniproject.dto.SignupRequest;
-import com.minsu.miniproject.dto.UserResponse;
-import com.minsu.miniproject.service.UserService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +45,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -49,7 +56,12 @@ public class AuthController {
                 )
             );
             
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContext securityContext = SecurityContextHolder.getContext();
+            securityContext.setAuthentication(authentication);
+            
+            // 세션에 SecurityContext 저장
+            HttpSession session = httpRequest.getSession(true);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
             
             Map<String, String> response = new HashMap<>();
             response.put("message", "로그인 성공");
@@ -64,16 +76,22 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
         SecurityContextHolder.clearContext();
+        
         Map<String, String> response = new HashMap<>();
         response.put("message", "로그아웃 성공");
         return ResponseEntity.ok(response);
     }
-    
+
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null || !authentication.isAuthenticated() 
+            || authentication.getPrincipal().equals("anonymousUser")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         

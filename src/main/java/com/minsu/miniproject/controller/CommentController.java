@@ -1,14 +1,14 @@
 package com.minsu.miniproject.controller;
 
+import com.minsu.miniproject.dto.CommentRequest;
+import com.minsu.miniproject.dto.CommentResponse;
+import com.minsu.miniproject.service.CommentService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import com.minsu.miniproject.dto.CommentRequest;
-import com.minsu.miniproject.dto.CommentResponse;
-import com.minsu.miniproject.service.CommentService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +32,12 @@ public class CommentController {
             @Valid @RequestBody CommentRequest request,
             Authentication authentication) {
         try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("message", "로그인이 필요합니다");
+                return ResponseEntity.status(401).body(error);
+            }
+            
             String username = authentication.getName();
             CommentResponse comment = commentService.createComment(postId, request, username);
             return ResponseEntity.ok(comment);
@@ -48,6 +54,12 @@ public class CommentController {
             @Valid @RequestBody CommentRequest request,
             Authentication authentication) {
         try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("message", "로그인이 필요합니다");
+                return ResponseEntity.status(401).body(error);
+            }
+            
             String username = authentication.getName();
             CommentResponse comment = commentService.updateComment(id, request, username);
             return ResponseEntity.ok(comment);
@@ -63,6 +75,12 @@ public class CommentController {
             @PathVariable Long id,
             Authentication authentication) {
         try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("message", "로그인이 필요합니다");
+                return ResponseEntity.status(401).body(error);
+            }
+            
             String username = authentication.getName();
             commentService.deleteComment(id, username);
             Map<String, String> response = new HashMap<>();

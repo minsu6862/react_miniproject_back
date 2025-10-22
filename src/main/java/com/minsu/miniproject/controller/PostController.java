@@ -1,5 +1,9 @@
 package com.minsu.miniproject.controller;
 
+import com.minsu.miniproject.dto.PostRequest;
+import com.minsu.miniproject.dto.PostResponse;
+import com.minsu.miniproject.service.PostService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -8,10 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import com.minsu.miniproject.dto.PostRequest;
-import com.minsu.miniproject.dto.PostResponse;
-import com.minsu.miniproject.service.PostService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,8 +25,8 @@ public class PostController {
 
     @GetMapping
     public ResponseEntity<Page<PostResponse>> getAllPosts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") int page,  // @RequestParam 추가!
+            @RequestParam(defaultValue = "10") int size) { // @RequestParam 추가!
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(postService.getAllPosts(pageable));
     }
@@ -38,9 +38,9 @@ public class PostController {
 
     @GetMapping("/search")
     public ResponseEntity<Page<PostResponse>> searchPosts(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam String keyword,  // @RequestParam 추가!
+            @RequestParam(defaultValue = "0") int page,  // @RequestParam 추가!
+            @RequestParam(defaultValue = "10") int size) { // @RequestParam 추가!
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(postService.searchPosts(keyword, pageable));
     }
@@ -50,6 +50,12 @@ public class PostController {
             @Valid @RequestBody PostRequest request,
             Authentication authentication) {
         try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("message", "로그인이 필요합니다");
+                return ResponseEntity.status(401).body(error);
+            }
+            
             String username = authentication.getName();
             PostResponse post = postService.createPost(request, username);
             return ResponseEntity.ok(post);
@@ -66,6 +72,12 @@ public class PostController {
             @Valid @RequestBody PostRequest request,
             Authentication authentication) {
         try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("message", "로그인이 필요합니다");
+                return ResponseEntity.status(401).body(error);
+            }
+            
             String username = authentication.getName();
             PostResponse post = postService.updatePost(id, request, username);
             return ResponseEntity.ok(post);
@@ -81,6 +93,12 @@ public class PostController {
             @PathVariable Long id,
             Authentication authentication) {
         try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("message", "로그인이 필요합니다");
+                return ResponseEntity.status(401).body(error);
+            }
+            
             String username = authentication.getName();
             postService.deletePost(id, username);
             Map<String, String> response = new HashMap<>();
